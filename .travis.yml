@@ -1,12 +1,9 @@
-language: node_js
+language: java
 
-node_js:
-  - "8"
-  - "10"
-
-cache:
-  directories:
-    - "node_modules"
+jdk:
+  - openjdk8
+  - openjdk10
+  - openjdk11
 
 script:
-  - npm run lint
+  - mvn clean test

@@ -1,52 +1,51 @@
-# Javascript package
+# GtxPoint payment page SDK
 
-### What is it?
+This is a set of libraries in the Java language to ease integration of your service
+with the GtxPoint Payment Page.
 
-It is package that will help you with generating payment URL according to 
-[GTXPoint documentation](https://developers.gtxpoint.com/en/en_PP_Integration.html).
+## Payment flow
 
-### How to use?
+![Payment flow](flow.png)
 
-#### Get payment page URL
+### Get URL for payment
 
-1. Install the package (with your package manager):
-```shell
-npm install gtxpoint
-yarn add gtxpoint
+```java
+String secretKey = "secret";
+String encryptKey = "encrypt_secret";
+String projectId = "11";
+
+Gate gate = new Gate(secretKey);
+Payment payment = new Payment(projectId);
+
+payment
+    .setParam(Payment.PAYMENT_ID, "some payment id")
+    .setParam(Payment.PAYMENT_AMOUNT, 1001)
+    .setParam(Payment.PAYMENT_CURRENCY, "EUR");
+
+String paymentUrl = gate.getPurchasePaymentPageUrl(your_pp_url, payment);
+
+// Use the `getPurchasePaymentPageCipherUrl` method to encode the payment link.
+String paymentUrl = gate.getPurchasePaymentPageCipherUrl(your_pp_url, payment, encryptKey);
+``` 
+
+`paymentUrl` here is the signed & encoded URL.
+
+### Handle callback from GtxPoint
+
+You'll need to autoload this code in order to handle notifications:
+
+```java
+Gate gate = new Gate("secret");
+Callback callback = gate.handleCallback(callbackData);
 ```
 
-2. Require somewhere in your code, set parameters and get the URL:
-```javascript
-const { Payment } = require('gtxpoint');
+`data` is the JSON string received from payment system;
 
-// create Payment object with your account ID and secret salt
-const e = new Payment('112', 'my_secret');
-
-// set payment details 
-e.paymentAmount = 1000;
-e.paymentId = 'FFCD12-30';
-e.paymentCurrency = 'USD';
-
-// set another parameters, like success or fail callback URL, customer details, etc.
-
-// get payment URL
-const url = e.getUrl();
-```
-
-Now your can render payment `url` somewhere on your checkout page.
-
-#### Receive callback
-
-Example with [Express](http://expressjs.com):
-```javascript
-const { Callback } = require('gtxpoint');
-
-app.post('/payment/callback', function(req, res) {
-  const callback = new Callback('secret', req.body);
-  if (callback.isPaymentSuccess()) {
-    const paymentId = callback.getPaymentId();
-    // here is your code for success payment
-  }
-});
-```
-Note that `Callback` constructor throws Error if signature isn't valid.
+`callback` is the Callback object describing properties received from payment system;
+`callback` implements these methods:
+1. `callback.getPaymentStatus();`
+   Get payment status.
+2. `callback.getPayment();`
+   Get all payment data.
+3. `callback.getPaymentId();`
+   Get payment ID in your system.
